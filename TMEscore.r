@@ -49,3 +49,27 @@ pdf(file="ggplot.pdf", width=6, height=5)
 print(p1)
 dev.off()
   
+
+##########绘制相关性散点图##########
+outTab=data.frame()
+for(i in colnames(rt)[1:(ncol(rt)-1)]){
+  x=as.numeric(rt[,'TFRC'])
+  y=as.numeric(rt[,i])
+  if(sd(y)==0){y[1]=0.00001}
+  cor=cor.test(x, y, method="spearman")
+  outVector=cbind(Cell=i, cor=cor$estimate, pvalue=cor$p.value)
+  outTab=rbind(outTab,outVector)
+  if(cor$p.value<0.05){
+    outFile=paste0("cor.", i, ".pdf")
+    df1=as.data.frame(cbind(x,y))
+    p1=ggplot(df1, aes(x, y)) + 
+      xlab(paste0('TFRC', " expression")) + ylab(i)+
+      geom_point() + geom_smooth(method="lm",formula = y ~ x) + theme_bw()+
+      stat_cor(method = 'spearman', aes(x =x, y =y))
+    p2=ggMarginal(p1, type="density", xparams=list(fill = "orange"), yparams=list(fill = "blue"))
+    #相关性图形
+    pdf(file=outFile, width=5.2, height=5)
+    print(p2)
+    dev.off()
+  }
+}
